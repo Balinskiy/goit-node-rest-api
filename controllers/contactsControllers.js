@@ -47,7 +47,7 @@ export const createContact = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
     const { name, email, phone } = req.body;
-    const result = await addContact(name, email, phone);
+    const result = await Contact.create({ name, email, phone });
     res.status(201).json(result);
   } catch (error) {
     next(error);

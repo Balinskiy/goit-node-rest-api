@@ -15,7 +15,6 @@ const register = async (req, res, next) => {
     const hashPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({ password: hashPassword, email: normalizedEmail });
 
-    console.log(newUser);
     res.status(201).json({
       user: {
         email: newUser.email,
@@ -26,4 +25,24 @@ const register = async (req, res, next) => {
   }
 };
 
-export default { register };
+const login = async (req, res, next) => {
+  const { password, email } = req.body;
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      throw HttpError(401, "Email or password is wrong");
+    }
+    const passCompare = await bcrypt.compare(password, user.password);
+    if (!passCompare) {
+      throw HttpError(401, "Email or password is wrong");
+    }
+
+    res.json({ message: "Login successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { register, login };

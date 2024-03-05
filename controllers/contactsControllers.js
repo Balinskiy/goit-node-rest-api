@@ -4,7 +4,7 @@ import Contact from "../models/contacts.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const result = await Contact.find();
+    const result = await Contact.find({ owner: req.user.id });
     res.json(result);
   } catch (error) {
     next(error);
@@ -13,11 +13,12 @@ export const getAllContacts = async (req, res, next) => {
 
 export const getOneContact = async (req, res, next) => {
   try {
-    console.log(req.params.id);
-
     const { id } = req.params;
     const result = await Contact.findById(id);
     if (!result) {
+      throw HttpError(404);
+    }
+    if (result.owner.toString() !== req.user.id) {
       throw HttpError(404);
     }
     res.json(result);
@@ -46,7 +47,8 @@ export const createContact = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
     const { name, email, phone } = req.body;
-    const result = await Contact.create({ name, email, phone });
+    const owner = req.user.id;
+    const result = await Contact.create({ name, email, phone, owner });
     res.status(201).json(result);
   } catch (error) {
     next(error);

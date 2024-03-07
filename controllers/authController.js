@@ -19,6 +19,7 @@ const register = async (req, res, next) => {
     res.status(201).json({
       user: {
         email: newUser.email,
+        subscription: newUser.subscription,
       },
     });
   } catch (error) {
@@ -28,6 +29,11 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   const { password, email } = req.body;
+
+  if (!email || !password) {
+    return next(HttpError(400, "Missed required email or password field"));
+  }
+
   const normalizedEmail = email.toLowerCase();
 
   try {
@@ -50,7 +56,13 @@ const login = async (req, res, next) => {
 
     await User.findByIdAndUpdate(user._id, { token });
 
-    res.json({ token: token });
+    res.json({
+      token: token,
+      user: {
+        email,
+        subscription: user.subscription,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -66,9 +78,21 @@ const logout = async (req, res, next) => {
   }
 };
 
-const getCurrent = async (req, res) => {
-  const { email } = req.user;
-  res.json({ email });
+const getCurrent = async (req, res, next) => {
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw HttpError(401, "Not authorized");
+    }
+    res.json({
+      email: user.email,
+      subscription: user.subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export default { register, login, getCurrent, logout };

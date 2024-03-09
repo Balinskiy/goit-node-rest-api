@@ -10,10 +10,11 @@ import {
 import validateBody from "../helpers/validateBody.js";
 import { createContactSchema, updateContactSchema, updateContactStatusSchema } from "../schemas/contactsSchemas.js";
 import isValidId from "../middlewares/isValidId.js";
+import authenticate from "../middlewares/authenticate.js";
 
 const contactsRouter = express.Router();
 
-contactsRouter.get("/", getAllContacts);
+contactsRouter.get("/", authenticate, getAllContacts);
 
 contactsRouter.get("/:id", isValidId, getOneContact);
 

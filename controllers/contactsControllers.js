@@ -4,7 +4,7 @@ import Contact from "../models/contacts.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const { owner } = req.user._id;
+    const { _id: owner } = req.user;
     const result = await Contact.find({ owner });
     res.json(result);
   } catch (error) {

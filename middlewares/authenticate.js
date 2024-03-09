@@ -16,6 +16,7 @@ function authenticate(req, res, next) {
   }
 
   jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
+    console.log(decode);
     if (error) {
       if (error.name === "TokenExpiredError") {
         return next(HttpError(401, "Token expired"));
@@ -23,20 +24,24 @@ function authenticate(req, res, next) {
       return next(HttpError(401, "Not authorized"));
     }
 
-    const user = await User.findById(decode.id);
-    if (user === null) {
-      return next(HttpError(401, "Not authorized"));
+    try {
+      const user = await User.findById(decode.id);
+      if (user === null) {
+        return next(HttpError(401, "Not authorized"));
+      }
+
+      if (user.token !== token) {
+        return next(HttpError(401, "Not authorized"));
+      }
+
+      req.user = {
+        _id: decode.id,
+      };
+
+      next();
+    } catch (error) {
+      next(error);
     }
-
-    if (user.token !== token) {
-      return next(HttpError(401, "Not authorized"));
-    }
-
-    req.user = {
-      id: decode.id,
-    };
-
-    next();
   });
 }
 

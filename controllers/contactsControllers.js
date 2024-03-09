@@ -1,11 +1,11 @@
 import HttpError from "../helpers/HttpError.js";
 import { createContactSchema, updateContactSchema, updateContactStatusSchema } from "../schemas/contactsSchemas.js";
 import Contact from "../models/contacts.js";
-import { decode } from "jsonwebtoken";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const result = await Contact.find({ owner: decode.id });
+    const { _id: owner } = req.user;
+    const result = await Contact.find({ owner });
     res.json(result);
   } catch (error) {
     next(error);
@@ -20,7 +20,7 @@ export const getOneContact = async (req, res, next) => {
     if (!result) {
       throw HttpError(404);
     }
-    if (result.owner.toString() !== req.user.id) {
+    if (result.owner.toString() !== req.user._id) {
       throw HttpError(404);
     }
     res.json(result);
@@ -50,7 +50,7 @@ export const createContact = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
     const { name, email, phone } = req.body;
-    const owner = req.user.id;
+    const owner = req.user._id;
     const result = await Contact.create({ name, email, phone, owner });
     res.status(201).json(result);
   } catch (error) {

@@ -2,6 +2,9 @@ import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
+import * as fs from "node:fs/promises";
+import * as path from "path";
+import gravatar from "gravatar";
 
 const register = async (req, res, next) => {
   const { password, email } = req.body;
@@ -14,12 +17,14 @@ const register = async (req, res, next) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ password: hashPassword, email: normalizedEmail });
+    const avatarUrl = gravatar.url(normalizedEmail, { s: "200", r: "pg", d: "404" }, true);
+    const newUser = await User.create({ password: hashPassword, email: normalizedEmail, avatarUrl: avatarUrl });
 
     res.status(201).json({
       user: {
         email: newUser.email,
         subscription: newUser.subscription,
+        avatarUrl: newUser.avatarUrl,
       },
     });
   } catch (error) {
@@ -95,4 +100,29 @@ const getCurrent = async (req, res, next) => {
   }
 };
 
-export default { register, login, getCurrent, logout };
+const getAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user || !user.avatar) {
+      throw HttpError(404, "User or Avatar not found");
+    }
+    res.sendFile(path.join(process.cwd(), "public/avatars", user.avatar));
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateAvatar = async (req, res, next) => {
+  try {
+    await fs.rename(req.file.path, path.join(process.cwd(), "public/avatars", req.file.filename));
+    const user = await User.findByIdAndUpdate(req.user._id, { avatar: req.file.filename }, { new: true });
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { register, login, getCurrent, logout, updateAvatar, getAvatar };

@@ -4,6 +4,7 @@ import authenticate from "../middlewares/authenticate.js";
 import isValidBody from "../middlewares/isValidBody.js";
 import validateBody from "../helpers/validateBody.js";
 import { userLoginSchema, userRegisterSchema } from "../schemas/userSchema.js";
+import upload from "../middlewares/upload.js";
 
 const authRouter = express.Router();
 
@@ -11,5 +12,7 @@ authRouter.post("/register", isValidBody, validateBody(userRegisterSchema), auth
 authRouter.post("/login", isValidBody, validateBody(userLoginSchema), authController.login);
 authRouter.post("/logout", authenticate, authController.logout);
 authRouter.get("/current", authenticate, authController.getCurrent);
+authRouter.get("/avatar", authenticate, authController.getAvatar);
+authRouter.patch("/avatar", authenticate, upload.single("avatarURL"), authController.updateAvatar);
 
 export default authRouter;

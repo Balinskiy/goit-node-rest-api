@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import * as fs from "node:fs/promises";
 import * as path from "path";
 import gravatar from "gravatar";
+import Jimp from "jimp";
 
 const register = async (req, res, next) => {
   const { password, email } = req.body;
@@ -114,11 +115,17 @@ const getAvatar = async (req, res, next) => {
 
 const updateAvatar = async (req, res, next) => {
   try {
-    await fs.rename(req.file.path, path.join(process.cwd(), "public/avatars", req.file.filename));
-    const user = await User.findByIdAndUpdate(req.user._id, { avatar: req.file.filename }, { new: true });
-    if (!user) {
-      throw HttpError(404, "User not found");
-    }
+    const newFilename = req.file.filename;
+    await fs.rename(req.file.path, path.join(process.cwd(), "public/avatars", newFilename));
+
+    const imagePath = path.join(process.cwd(), "public/avatars", newFilename);
+    const image = await Jimp.read(imagePath);
+
+    await image.resize(250, 250);
+    await image.writeAsync(imagePath);
+
+    const user = await User.findByIdAndUpdate(req.user._id, { avatar: newFilename }, { new: true });
+
     res.json(user);
   } catch (error) {
     next(error);

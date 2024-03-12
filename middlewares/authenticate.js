@@ -16,7 +16,6 @@ function authenticate(req, res, next) {
   }
 
   jwt.verify(token, process.env.JWT_SECRET, async (error, decode) => {
-    console.log(decode);
     if (error) {
       if (error.name === "TokenExpiredError") {
         return next(HttpError(401, "Token expired"));

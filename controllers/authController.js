@@ -102,12 +102,14 @@ const getCurrent = async (req, res, next) => {
 };
 
 const getAvatar = async (req, res, next) => {
+  const userId = req.user._id;
+  console.log(userId);
   try {
-    const user = await User.findById(req.user._id);
-    if (!user || !user.avatar) {
+    const user = await User.findById(userId);
+    if (!user || !user.avatarUrl) {
       throw HttpError(404, "User or Avatar not found");
     }
-    res.sendFile(path.join(process.cwd(), "public/avatars", user.avatar));
+    res.sendFile(path.join(process.cwd(), "public/avatars", user.avatarUrl));
   } catch (error) {
     next(error);
   }
@@ -124,7 +126,7 @@ const updateAvatar = async (req, res, next) => {
     await image.resize(250, 250);
     await image.writeAsync(imagePath);
 
-    const user = await User.findByIdAndUpdate(req.user._id, { avatar: newFilename }, { new: true });
+    const user = await User.findByIdAndUpdate(req.user._id, { avatarUrl: newFilename }, { new: true });
 
     res.json(user);
   } catch (error) {

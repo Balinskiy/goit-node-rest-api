@@ -103,7 +103,7 @@ const getCurrent = async (req, res, next) => {
 
 const getAvatar = async (req, res, next) => {
   const userId = req.user._id;
-  console.log(userId);
+
   try {
     const user = await User.findById(userId);
     if (!user || !user.avatarUrl) {
@@ -128,7 +128,9 @@ const updateAvatar = async (req, res, next) => {
 
     const user = await User.findByIdAndUpdate(req.user._id, { avatarUrl: newFilename }, { new: true });
 
-    res.json(user);
+    res.json({
+      avatarUrl: user.avatarUrl,
+    });
   } catch (error) {
     next(error);
   }

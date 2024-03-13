@@ -11,8 +11,8 @@ const authRouter = express.Router();
 
 authRouter.post("/register", isValidBody, validateBody(userRegisterSchema), authController.register);
 authRouter.post("/login", isValidBody, validateBody(userLoginSchema), authController.login);
-authRouter.post("/logout", authenticate, isValidId, authController.logout);
-authRouter.get("/current", authenticate, isValidId, authController.getCurrent);
+authRouter.post("/logout", authenticate, authController.logout);
+authRouter.get("/current", authenticate, authController.getCurrent);
 authRouter.get("/avatars", authenticate, authController.getAvatar);
 authRouter.patch("/avatars", authenticate, upload.single("avatarURL"), authController.updateAvatar);
 

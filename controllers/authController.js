@@ -125,10 +125,8 @@ const updateAvatar = async (req, res, next) => {
     console.log(imagePath);
     await fs.rename(req.file.path, imagePath);
 
-    Jimp.read(imagePath, (err, imagePath) => {
-      if (err) throw err;
-      imagePath.resize(250, 250).write(newFilename);
-    });
+    const image = await Jimp.read(imagePath);
+    await image.resize(250, 250).writeAsync(imagePath);
 
     await User.findByIdAndUpdate(req.user._id, { avatarUrl: `/avatars/${newFilename}` }, { new: true });
 

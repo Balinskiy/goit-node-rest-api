@@ -117,20 +117,22 @@ const getAvatar = async (req, res, next) => {
 
 const updateAvatar = async (req, res, next) => {
   try {
+    if (!req.file) {
+      throw HttpError(400, "Select an avatar file to upload");
+    }
     const newFilename = req.file.filename;
-    await fs.rename(req.file.path, path.join(process.cwd(), "public/avatars", newFilename));
-
     const imagePath = path.join(process.cwd(), "public/avatars", newFilename);
-    const image = await Jimp.read(imagePath);
+    console.log(imagePath);
+    await fs.rename(req.file.path, imagePath);
 
-    await image.resize(250, 250);
-    await image.writeAsync(imagePath);
-
-    const user = await User.findByIdAndUpdate(req.user._id, { avatarUrl: newFilename }, { new: true });
-
-    res.json({
-      avatarUrl: user.avatarUrl,
+    Jimp.read(imagePath, (err, imagePath) => {
+      if (err) throw err;
+      imagePath.resize(250, 250).write(newFilename);
     });
+
+    await User.findByIdAndUpdate(req.user._id, { avatarUrl: `/avatars/${newFilename}` }, { new: true });
+
+    res.json({ avatarUrl: newFilename });
   } catch (error) {
     next(error);
   }

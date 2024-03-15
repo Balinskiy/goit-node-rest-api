@@ -128,9 +128,10 @@ const updateAvatar = async (req, res, next) => {
     const image = await Jimp.read(imagePath);
     await image.resize(250, 250).writeAsync(imagePath);
 
-    await User.findByIdAndUpdate(req.user._id, { avatarUrl: `/avatars/${newFilename}` }, { new: true });
+    const avatarPath = path.join("avatars", newFilename);
+    await User.findByIdAndUpdate(req.user._id, { avatarUrl: avatarPath }, { new: true });
 
-    res.json({ avatarUrl: newFilename });
+    res.json({ avatarUrl: avatarPath });
   } catch (error) {
     next(error);
   }

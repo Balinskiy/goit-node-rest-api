@@ -1,3 +1,4 @@
+import "dotenv/config";
 import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
 import User from "../models/user.js";
@@ -6,6 +7,17 @@ import * as fs from "node:fs/promises";
 import * as path from "path";
 import gravatar from "gravatar";
 import Jimp from "jimp";
+import nodemailer from "nodemailer";
+import crypto from "node:crypto";
+
+const transport = nodemailer.createTransport({
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
+  auth: {
+    user: process.env.MAILTRAP_USER,
+    pass: process.env.MAILTRAP_PASSWORD,
+  },
+});
 
 const register = async (req, res, next) => {
   const { password, email } = req.body;
@@ -18,8 +30,20 @@ const register = async (req, res, next) => {
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
+
+    const verificationToken = crypto.randomUUID();
+
+    // SendEmail
+    await transport.sendMail({
+      to: email,
+      from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>',
+      subject: "Welcome ✔, Please, verify your E-mail",
+      html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/auth/verify/${verificationToken}">link</a>`,
+      text: `To confirm your registration open the link: http://localhost:8080/users/auth/verify/${verificationToken}`,
+    });
+
     const avatarUrl = gravatar.url(normalizedEmail, { s: "250", r: "pg", d: "404" }, true);
-    const newUser = await User.create({ password: hashPassword, email: normalizedEmail, avatarUrl: avatarUrl });
+    const newUser = await User.create({ verificationToken: verificationToken, password: hashPassword, email: normalizedEmail, avatarUrl: avatarUrl });
 
     res.status(201).json({
       user: {
@@ -137,4 +161,16 @@ const updateAvatar = async (req, res, next) => {
   }
 };
 
-export default { register, login, getCurrent, logout, updateAvatar, getAvatar };
+const verify = async (req, res, next) => {
+  const { token } = req.params;
+
+  try {
+    const user = await User.findOne({ verificationToken: token });
+
+    res.json({ token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { register, login, getCurrent, logout, updateAvatar, getAvatar, verify };

@@ -33,6 +33,10 @@ function authenticate(req, res, next) {
         return next(HttpError(401, "Not authorized"));
       }
 
+      if (user.verify === false) {
+        throw HttpError(401, "Your account is not verified");
+      }
+
       req.user = {
         _id: decode.id,
       };

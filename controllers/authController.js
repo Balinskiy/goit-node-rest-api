@@ -38,8 +38,8 @@ const register = async (req, res, next) => {
       to: email,
       from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>',
       subject: "Welcome ✔, Please, verify your E-mail",
-      html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/auth/verify/${verificationToken}">link</a>`,
-      text: `To confirm your registration open the link: http://localhost:8080/users/auth/verify/${verificationToken}`,
+      html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/verify/${verificationToken}">link</a>`,
+      text: `To confirm your registration open the link: http://localhost:8080/users/verify/${verificationToken}`,
     });
 
     const avatarUrl = gravatar.url(normalizedEmail, { s: "250", r: "pg", d: "404" }, true);
@@ -74,6 +74,10 @@ const login = async (req, res, next) => {
     const passCompare = await bcrypt.compare(password, user.password);
     if (!passCompare) {
       throw HttpError(401, "Email or password is wrong");
+    }
+
+    if (user.verify === false) {
+      throw HttpError(401, "Your account is not verified");
     }
 
     const token = jwt.sign(
@@ -162,15 +166,43 @@ const updateAvatar = async (req, res, next) => {
 };
 
 const verify = async (req, res, next) => {
-  const { token } = req.params;
+  const { verificationToken } = req.params;
 
   try {
-    const user = await User.findOne({ verificationToken: token });
+    const user = await User.findOne({ verificationToken: verificationToken });
+    if (user === null) {
+      throw HttpError(404, "User not found");
+    }
 
-    res.json({ token });
+    await User.findOneAndUpdate({ verificationToken }, { verify: true, verificationToken: null });
+
+    res.json({ message: "Verification successful" });
   } catch (error) {
     next(error);
   }
 };
 
-export default { register, login, getCurrent, logout, updateAvatar, getAvatar, verify };
+const resendVerify = async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw HttpError(400, "Missing required field email");
+  }
+
+  if (user.verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+  // Re-SendEmail
+  await transport.sendMail({
+    to: email,
+    from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>',
+    subject: "Welcome ✔, Please, verify your E-mail",
+    html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/verify/${verificationToken}">link</a>`,
+    text: `To confirm your registration open the link: http://localhost:8080/users/verify/${verificationToken}`,
+  });
+    res.json({
+      message: "Verification email sent",
+    });
+};
+
+export default { register, login, getCurrent, logout, updateAvatar, getAvatar, verify, resendVerify };

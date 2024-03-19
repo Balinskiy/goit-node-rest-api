@@ -192,17 +192,19 @@ const resendVerify = async (req, res, next) => {
   if (user.verify) {
     throw HttpError(400, "Verification has already been passed");
   }
+
   // Re-SendEmail
   await transport.sendMail({
     to: email,
     from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>',
-    subject: "Welcome ✔, Please, verify your E-mail",
-    html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/verify/${verificationToken}">link</a>`,
-    text: `To confirm your registration open the link: http://localhost:8080/users/verify/${verificationToken}`,
+    subject: "Re-Send ✔, Please, verify your E-mail",
+    html: `To confirm your registration click to the link: <a href="http://localhost:8080/users/verify/${user.verificationToken}">link</a>`,
+    text: `To confirm your registration open the link: http://localhost:8080/users/verify/${user.verificationToken}`,
   });
-    res.json({
-      message: "Verification email sent",
-    });
+
+  res.json({
+    message: "Verification email sent",
+  });
 };
 
 export default { register, login, getCurrent, logout, updateAvatar, getAvatar, verify, resendVerify };

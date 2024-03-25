@@ -9,11 +9,6 @@ import gravatar from "gravatar";
 import Jimp from "jimp";
 import nodemailer from "nodemailer";
 import crypto from "node:crypto";
-import sgMail from "@sendgrid/mail";
-
-console.log(process.env.SENDGRID_API_KEY);
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const transport = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",

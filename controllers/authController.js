@@ -10,6 +10,14 @@ import Jimp from "jimp";
 import nodemailer from "nodemailer";
 import crypto from "node:crypto";
 
+const message = {
+  to: "3879342@gmail.com",
+  from: "3879342@gmail.com", // Use the email address or domain you verified above
+  subject: "Sending with Twilio SendGrid is Fun",
+  text: "and easy to do anywhere, even with Node.js",
+  html: "<strong>and easy to do anywhere, even with Node.js</strong>",
+};
+
 const transport = nodemailer.createTransport({
   host: "sandbox.smtp.mailtrap.io",
   port: 2525,
